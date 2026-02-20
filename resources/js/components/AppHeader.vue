@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid, Menu, Search } from 'lucide-vue-next';
+import { BookOpen, Folder, LayoutGrid, Menu, Search, User } from 'lucide-vue-next';
 import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
@@ -36,6 +36,7 @@ import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { getInitials } from '@/composables/useInitials';
 import { toUrl } from '@/lib/utils';
 import { dashboard } from '@/routes';
+import customers from '@/routes/customers';
 import type { BreadcrumbItem, NavItem } from '@/types';
 
 type Props = {
@@ -56,8 +57,13 @@ const activeItemStyles =
 const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
-        href: dashboard(),
+        href: dashboard().url,
         icon: LayoutGrid,
+    },
+    {
+        title: 'Customer',
+        href: customers.index().url,
+        icon: User,
     },
 ];
 
@@ -146,8 +152,12 @@ const rightNavItems: NavItem[] = [
                     </Sheet>
                 </div>
 
-                <Link :href="dashboard()" class="flex items-center gap-x-2">
+                <Link :href="dashboard().url" class="flex items-center gap-x-2">
                     <AppLogo />
+                </Link>
+
+                <Link :href="customers.index().url" class="flex items-center gap-x-2">
+                    <AppLogo/>
                 </Link>
 
                 <!-- Desktop Menu -->
