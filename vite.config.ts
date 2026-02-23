@@ -1,8 +1,8 @@
-import { wayfinder } from '@laravel/vite-plugin-wayfinder';
-import tailwindcss from '@tailwindcss/vite';
-import vue from '@vitejs/plugin-vue';
-import laravel from 'laravel-vite-plugin';
-import { defineConfig } from 'vite';
+import { wayfinder } from '@laravel/vite-plugin-wayfinder'
+import tailwindcss from '@tailwindcss/vite'
+import vue from '@vitejs/plugin-vue'
+import laravel from 'laravel-vite-plugin'
+import { defineConfig } from 'vite'
 
 export default defineConfig({
     plugins: [
@@ -12,7 +12,7 @@ export default defineConfig({
             refresh: true,
         }),
         tailwindcss(),
-        wayfinder({
+        process.env.SKIP_WAYFINDER ? null : wayfinder({
             formVariants: true,
         }),
         vue({
@@ -23,5 +23,5 @@ export default defineConfig({
                 },
             },
         }),
-    ],
-});
+    ].filter(Boolean),
+})

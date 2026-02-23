@@ -1,54 +1,61 @@
 # ===============================
-# Stage 1 — Build Frontend
-# ===============================
-FROM node:20 AS node_builder
-
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci
-
-COPY . .
-RUN npm run build
-
-
-# ===============================
-# Stage 2 — PHP Dependencies
+# Stage 1 — Composer (PHP ready)
 # ===============================
 FROM composer:2 AS composer_builder
 
 WORKDIR /app
-COPY composer.json composer.lock ./
-RUN composer install --no-dev --optimize-autoloader --no-scripts
 
 COPY . .
-RUN composer dump-autoload --optimize
 
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --optimize-autoloader
+
+# Generate wayfinder types (butuh artisan & vendor)
+RUN php artisan wayfinder:generate --with-form
+
+
+# ===============================
+# Stage 2 — Node build
+# ===============================
+FROM node:20-alpine AS node_builder
+
+WORKDIR /app
+
+ENV SKIP_WAYFINDER=true
+
+COPY package*.json ./
+RUN npm ci
+
+COPY . .
+COPY --from=composer_builder /app/vendor ./vendor
+
+RUN npm run build
 
 # ===============================
 # Stage 3 — Runtime (Caddy + PHP)
 # ===============================
 FROM caddy:2-alpine
 
-# Install PHP-FPM inside Caddy image
 RUN apk add --no-cache \
-    php82 \
-    php82-fpm \
-    php82-pdo \
-    php82-pdo_pgsql \
-    php82-intl \
-    php82-mbstring \
-    php82-session \
-    php82-opcache \
-    php82-ctype \
-    php82-fileinfo \
-    php82-tokenizer \
-    php82-dom \
-    php82-xml \
-    php82-simplexml \
-    php82-curl \
-    php82-zip \
-    php82-openssl \
-    php82-phar \
+    php83 \
+    php83-fpm \
+    php83-pdo \
+    php83-pdo_pgsql \
+    php83-intl \
+    php83-mbstring \
+    php83-session \
+    php83-opcache \
+    php83-ctype \
+    php83-fileinfo \
+    php83-tokenizer \
+    php83-dom \
+    php83-xml \
+    php83-simplexml \
+    php83-curl \
+    php83-zip \
+    php83-openssl \
+    php83-phar \
+    php83-iconv \
     bash
 
 WORKDIR /var/www
@@ -63,4 +70,4 @@ RUN mkdir -p /run/php
 
 EXPOSE 80
 
-CMD php82-fpm -D && caddy run --config /etc/caddy/Caddyfile --adapter caddyfile
+CMD php-fpm83 -D && caddy run --config /etc/caddy/Caddyfile --adapter caddyfile
