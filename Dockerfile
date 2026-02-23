@@ -1,73 +1,77 @@
-# ===============================
-# Stage 1 — Composer (PHP ready)
-# ===============================
+############################
+# Stage 1: Composer Builder
+############################
 FROM composer:2 AS composer_builder
-
 WORKDIR /app
+# Copy hanya file pendukung dulu agar cache layer efisien
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist
 
 COPY . .
-
-COPY composer.json composer.lock ./
 RUN composer install --no-dev --optimize-autoloader
 
-# Generate wayfinder types (butuh artisan & vendor)
-RUN php artisan wayfinder:generate --with-form
-
-
-# ===============================
-# Stage 2 — Node build
-# ===============================
+############################
+# Stage 2: Node Builder
+############################
 FROM node:20-alpine AS node_builder
-
 WORKDIR /app
-
-ENV SKIP_WAYFINDER=true
-
 COPY package*.json ./
+# Tambahkan build tool jika ada library sass/native
+RUN apk add --no-cache python3 make g++ 
 RUN npm ci
-
 COPY . .
-COPY --from=composer_builder /app/vendor ./vendor
-
 RUN npm run build
 
-# ===============================
-# Stage 3 — Runtime (Caddy + PHP)
-# ===============================
-FROM caddy:2-alpine
+############################
+# Stage 3: Runtime
+############################
+FROM php:8.3-fpm-alpine
 
+# Install runtime dependencies & Caddy
 RUN apk add --no-cache \
-    php83 \
-    php83-fpm \
-    php83-pdo \
-    php83-pdo_pgsql \
-    php83-intl \
-    php83-mbstring \
-    php83-session \
-    php83-opcache \
-    php83-ctype \
-    php83-fileinfo \
-    php83-tokenizer \
-    php83-dom \
-    php83-xml \
-    php83-simplexml \
-    php83-curl \
-    php83-zip \
-    php83-openssl \
-    php83-phar \
-    php83-iconv \
-    bash
+    libpq \
+    libpng \
+    oniguruma \
+    zip \
+    unzip \
+    bash \
+    caddy
+
+# Install & compile PHP extensions, lalu hapus build-deps agar image kecil
+RUN apk add --no-cache --virtual .build-deps \
+    postgresql-dev \
+    libpng-dev \
+    oniguruma-dev \
+    && docker-php-ext-install \
+    pdo \
+    pdo_pgsql \
+    mbstring \
+    exif \
+    pcntl \
+    bcmath \
+    opcache \
+    && apk del .build-deps
 
 WORKDIR /var/www
 
-COPY . .
+# Copy vendor dari composer_builder
 COPY --from=composer_builder /app/vendor ./vendor
+# Copy hasil build dari node_builder (Vite/Mix)
 COPY --from=node_builder /app/public/build ./public/build
+# Copy sisa source code
+COPY . .
 
+# Copy konfigurasi Caddy
 COPY Caddyfile /etc/caddy/Caddyfile
 
-RUN mkdir -p /run/php
+# Set permission agar Laravel bisa nulis log/cache
+RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache \
+    && chmod -R 775 /var/www/storage /var/www/bootstrap/cache
+
+# Setup Entrypoint
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 EXPOSE 80
 
-CMD php-fpm83 -D && caddy run --config /etc/caddy/Caddyfile --adapter caddyfile
+ENTRYPOINT ["docker-

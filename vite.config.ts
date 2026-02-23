@@ -1,8 +1,9 @@
-import { wayfinder } from '@laravel/vite-plugin-wayfinder'
 import tailwindcss from '@tailwindcss/vite'
 import vue from '@vitejs/plugin-vue'
 import laravel from 'laravel-vite-plugin'
 import { defineConfig } from 'vite'
+
+const isDev = process.env.NODE_ENV === 'development'
 
 export default defineConfig({
     plugins: [
@@ -11,10 +12,16 @@ export default defineConfig({
             ssr: 'resources/js/ssr.ts',
             refresh: true,
         }),
+
         tailwindcss(),
-        process.env.SKIP_WAYFINDER ? null : wayfinder({
-            formVariants: true,
-        }),
+
+        // ✅ Only load Wayfinder when plugin is available
+        isDev && process.env.SKIP_WAYFINDER !== 'true'
+            ? await import('@laravel/vite-plugin-wayfinder').then(m =>
+                m.wayfinder({ formVariants: true })
+            )
+            : null,
+
         vue({
             template: {
                 transformAssetUrls: {
