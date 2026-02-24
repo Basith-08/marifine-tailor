@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Form, Head } from '@inertiajs/vue3';
+import { Head, useForm } from '@inertiajs/vue3';
 import InputError from '@/components/InputError.vue';
 import TextLink from '@/components/TextLink.vue';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,19 @@ import { Spinner } from '@/components/ui/spinner';
 import AuthBase from '@/layouts/AuthLayout.vue';
 import { login } from '@/routes';
 import { store } from '@/routes/register';
+
+const form = useForm({
+    name: '',
+    email: '',
+    password: '',
+    password_confirmation: '',
+});
+
+function submit() {
+    form.post(store().url, {
+        resetOnSuccess: false,
+    });
+}
 </script>
 
 <template>
@@ -18,12 +31,7 @@ import { store } from '@/routes/register';
     >
         <Head title="Register" />
 
-        <Form
-            v-bind="store.form()"
-            :reset-on-success="['password', 'password_confirmation']"
-            v-slot="{ errors, processing }"
-            class="flex flex-col gap-6"
-        >
+        <form @submit.prevent="submit" class="flex flex-col gap-6">
             <div class="grid gap-6">
                 <div class="grid gap-2">
                     <Label for="name">Name</Label>
@@ -36,8 +44,9 @@ import { store } from '@/routes/register';
                         autocomplete="name"
                         name="name"
                         placeholder="Full name"
+                        v-model="form.name"
                     />
-                    <InputError :message="errors.name" />
+                    <InputError :message="form.errors.name" />
                 </div>
 
                 <div class="grid gap-2">
@@ -50,8 +59,9 @@ import { store } from '@/routes/register';
                         autocomplete="email"
                         name="email"
                         placeholder="email@example.com"
+                        v-model="form.email"
                     />
-                    <InputError :message="errors.email" />
+                    <InputError :message="form.errors.email" />
                 </div>
 
                 <div class="grid gap-2">
@@ -64,8 +74,9 @@ import { store } from '@/routes/register';
                         autocomplete="new-password"
                         name="password"
                         placeholder="Password"
+                        v-model="form.password"
                     />
-                    <InputError :message="errors.password" />
+                    <InputError :message="form.errors.password" />
                 </div>
 
                 <div class="grid gap-2">
@@ -78,18 +89,19 @@ import { store } from '@/routes/register';
                         autocomplete="new-password"
                         name="password_confirmation"
                         placeholder="Confirm password"
+                        v-model="form.password_confirmation"
                     />
-                    <InputError :message="errors.password_confirmation" />
+                    <InputError :message="form.errors.password_confirmation" />
                 </div>
 
                 <Button
                     type="submit"
                     class="mt-2 w-full"
                     tabindex="5"
-                    :disabled="processing"
+                    :disabled="form.processing"
                     data-test="register-user-button"
                 >
-                    <Spinner v-if="processing" />
+                    <Spinner v-if="form.processing" />
                     Create account
                 </Button>
             </div>
@@ -103,6 +115,6 @@ import { store } from '@/routes/register';
                     >Log in</TextLink
                 >
             </div>
-        </Form>
+        </form>
     </AuthBase>
 </template>

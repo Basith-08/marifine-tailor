@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\MeasurementController::index
 * @see app/Http/Controllers/MeasurementController.php:25
@@ -68,6 +68,43 @@ index.head = (args: { customer: string | number | { id: string | number } } | [c
 })
 
 /**
+* @see \App\Http\Controllers\MeasurementController::index
+* @see app/Http/Controllers/MeasurementController.php:25
+* @route '/customers/{customer}/measurements'
+*/
+const indexForm = (args: { customer: string | number | { id: string | number } } | [customer: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: index.url(args, options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\MeasurementController::index
+* @see app/Http/Controllers/MeasurementController.php:25
+* @route '/customers/{customer}/measurements'
+*/
+indexForm.get = (args: { customer: string | number | { id: string | number } } | [customer: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: index.url(args, options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\MeasurementController::index
+* @see app/Http/Controllers/MeasurementController.php:25
+* @route '/customers/{customer}/measurements'
+*/
+indexForm.head = (args: { customer: string | number | { id: string | number } } | [customer: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: index.url(args, {
+        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+            _method: 'HEAD',
+            ...(options?.query ?? options?.mergeQuery ?? {}),
+        }
+    }),
+    method: 'get',
+})
+
+index.form = indexForm
+
+/**
 * @see \App\Http\Controllers\MeasurementController::store
 * @see app/Http/Controllers/MeasurementController.php:36
 * @route '/customers/{customer}/measurements'
@@ -124,6 +161,28 @@ store.post = (args: { customer: string | number | { id: string | number } } | [c
     url: store.url(args, options),
     method: 'post',
 })
+
+/**
+* @see \App\Http\Controllers\MeasurementController::store
+* @see app/Http/Controllers/MeasurementController.php:36
+* @route '/customers/{customer}/measurements'
+*/
+const storeForm = (args: { customer: string | number | { id: string | number } } | [customer: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: store.url(args, options),
+    method: 'post',
+})
+
+/**
+* @see \App\Http\Controllers\MeasurementController::store
+* @see app/Http/Controllers/MeasurementController.php:36
+* @route '/customers/{customer}/measurements'
+*/
+storeForm.post = (args: { customer: string | number | { id: string | number } } | [customer: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: store.url(args, options),
+    method: 'post',
+})
+
+store.form = storeForm
 
 const measurements = {
     index: Object.assign(index, index),

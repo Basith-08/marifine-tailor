@@ -11,15 +11,16 @@ export default defineConfig({
             input: ['resources/js/app.ts'],
             ssr: 'resources/js/ssr.ts',
             refresh: true,
+            detectTls: true,
+            buildDirectory: 'build',
         }),
 
         tailwindcss(),
 
-        // ✅ Only load Wayfinder when plugin is available
-        isDev && process.env.SKIP_WAYFINDER !== 'true'
-            ? await import('@laravel/vite-plugin-wayfinder').then(m =>
-                m.wayfinder({ formVariants: true })
-            )
+        isDev
+            ? (await import('@laravel/vite-plugin-wayfinder')).wayfinder({
+                formVariants: true,
+            })
             : null,
 
         vue({
